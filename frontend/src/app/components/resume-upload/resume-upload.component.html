@@ -1,0 +1,88 @@
+<!-- Resume Upload Section -->
+<section id="upload" class="py-12">
+  <div class="max-w-3xl mx-auto px-6">
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold text-slate-800">Upload Resumes</h2>
+      <p class="text-slate-500 mt-1">Drag and drop PDF or DOCX files, or click to browse</p>
+    </div>
+
+    <!-- Drag & Drop Zone -->
+    <div
+      (drop)="onDrop($event)"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave()"
+      [class]="isDragging
+        ? 'border-brand-500 bg-brand-50 scale-[1.01]'
+        : 'border-slate-300 bg-slate-50 hover:border-slate-400'"
+      class="relative border-2 border-dashed rounded-xl p-10 text-center
+             transition-all duration-200 cursor-pointer"
+    >
+      <input
+        type="file"
+        multiple
+        accept=".pdf,.docx,.doc"
+        (change)="onFileSelected($event)"
+        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+      />
+      <div class="pointer-events-none">
+        <svg class="mx-auto h-12 w-12 text-slate-400 mb-3" fill="none" viewBox="0 0 48 48" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V36a3 3 0 003 3h18a3 3 0 003-3V16.5M8 20.5l12.7-9.3a3 3 0 013.6 0L37 20.5" />
+        </svg>
+        <p class="text-base font-medium text-slate-600">
+          Drop resumes here or <span class="text-brand-600">browse files</span>
+        </p>
+        <p class="text-xs text-slate-400 mt-1">PDF, DOCX supported</p>
+      </div>
+    </div>
+
+    <!-- Pending File List -->
+    @if (files.length > 0) {
+      <div class="mt-4 space-y-2">
+        @for (file of files; track file.name; let i = $index) {
+          <div class="flex items-center justify-between bg-white rounded-lg px-4 py-3 border border-slate-200">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="text-lg">📄</span>
+              <span class="text-sm font-medium text-slate-700 truncate">{{ file.name }}</span>
+              <span class="text-xs text-slate-400 flex-shrink-0">{{ formatSize(file.size) }}</span>
+            </div>
+            <button
+              (click)="removeFile(i)"
+              class="text-slate-400 hover:text-red-500 transition-colors flex-shrink-0 ml-3"
+            >
+              ✕
+            </button>
+          </div>
+        }
+        <button class="btn-primary w-full mt-3" (click)="uploadFiles()" [disabled]="isLoading">
+          @if (isLoading) {
+            Uploading...
+          } @else {
+            Upload {{ files.length }} File(s)
+          }
+        </button>
+      </div>
+    }
+
+    <!-- Already Uploaded Files -->
+    @if (uploadedFileNames.length > 0) {
+      <div class="mt-6">
+        <h3 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">
+          Uploaded Files
+        </h3>
+        <div class="space-y-1.5">
+          @for (name of uploadedFileNames; track name) {
+            <div class="flex items-center gap-2 text-sm text-slate-600">
+              <span class="text-brand-500">✓</span>
+              <span>{{ name }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Loading spinner shown during upload -->
+    @if (isLoading) {
+      <app-loading-spinner />
+    }
+  </div>
+</section>

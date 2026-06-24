@@ -1,0 +1,240 @@
+<!-- Results Section -->
+@if (matchResults.length > 0) {
+  <section id="results" class="py-12">
+    <div class="max-w-5xl mx-auto px-6">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-800">Candidate Rankings</h2>
+          <p class="text-slate-500 mt-1">Top {{ matchResults.length }} matches found</p>
+        </div>
+      </div>
+
+      <!-- Results Table -->
+      <div class="card overflow-hidden mb-8">
+        <table class="w-full">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-200">
+              <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Rank</th>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Candidate</th>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">File</th>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Match</th>
+              <th class="px-5 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            @for (result of matchResults; track result.candidate_id) {
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-5 py-4">
+                  <span class="text-lg">{{ getRankBadge(result.rank) }}</span>
+                </td>
+                <td class="px-5 py-4">
+                  <div>
+                    <div class="font-semibold text-slate-800">{{ result.name }}</div>
+                    @if (result.email) {
+                      <div class="text-xs text-slate-400">{{ result.email }}</div>
+                    }
+                  </div>
+                </td>
+                <td class="px-5 py-4">
+                  <span class="text-sm text-slate-500">{{ result.file_name }}</span>
+                </td>
+                <td class="px-5 py-4">
+                  <div class="flex items-center gap-3">
+                    <div class="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden max-w-[120px]">
+                      <div
+                        class="h-full rounded-full transition-all duration-700"
+                        [class]="getMatchColor(result.match_percentage)"
+                        [style.width.%]="result.match_percentage"
+                      ></div>
+                    </div>
+                    <span class="text-sm font-bold text-slate-700 w-14 text-right">
+                      {{ result.match_percentage }}%
+                    </span>
+                  </div>
+                </td>
+                <td class="px-5 py-4 text-right">
+                  <div class="flex items-center justify-end gap-2">
+                    <button
+                      class="text-xs font-medium px-3 py-1.5 rounded-md
+                             bg-brand-50 text-brand-700 hover:bg-brand-100
+                             transition-colors"
+                      (click)="loadAnalysis(result.candidate_id)"
+                      [disabled]="loadingAnalysis === result.candidate_id"
+                    >
+                      @if (loadingAnalysis === result.candidate_id) {
+                        Analyzing...
+                      } @else {
+                        Analyze
+                      }
+                    </button>
+                    <button
+                      class="text-xs font-medium px-3 py-1.5 rounded-md
+                             bg-blue-50 text-blue-700 hover:bg-blue-100
+                             transition-colors"
+                      (click)="loadQuestions(result.candidate_id)"
+                      [disabled]="loadingQuestions === result.candidate_id"
+                    >
+                      @if (loadingQuestions === result.candidate_id) {
+                        Generating...
+                      } @else {
+                        Questions
+                      }
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Expanded Analysis & Questions Cards -->
+      @for (result of matchResults; track result.candidate_id) {
+        @if (expandedCandidate === result.candidate_id) {
+          <div class="card p-6 mb-6 border-l-4 border-l-brand-500">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-lg font-bold text-slate-800">
+                Analysis: {{ result.name }}
+              </h3>
+              <button
+                (click)="expandedCandidate = null"
+                class="text-slate-400 hover:text-slate-600 text-sm"
+              >
+                Close ✕
+              </button>
+            </div>
+
+            <!-- Analysis Card -->
+            @if (analyses.get(result.candidate_id); as analysis) {
+              <div class="space-y-6">
+                <!-- Summary & Score -->
+                <div class="flex flex-col sm:flex-row gap-4">
+                  <div class="flex-1">
+                    <h4 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Summary</h4>
+                    <p class="text-slate-700 text-sm leading-relaxed">
+                      {{ analysis.summary }}
+                      Experience: {{ analysis.years_of_experience }}
+                    </p>
+                    
+                  </div>
+                  <div class="flex flex-col items-center gap-2 sm:w-32">
+                    <div class="relative w-20 h-20">
+                      <svg class="w-20 h-20 -rotate-90" viewBox="0 0 36 36">
+                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#e2e8f0" stroke-width="3"/>
+                        <circle cx="18" cy="18" r="15.9" fill="none"
+                                [attr.stroke]="analysis.match_percentage >= 75 ? '#10b981' : analysis.match_percentage >= 50 ? '#eab308' : '#ef4444'"
+                                stroke-width="3"
+                                [attr.stroke-dasharray]="analysis.match_percentage + ' ' + (100 - analysis.match_percentage)"
+                                stroke-linecap="round"/>
+                      </svg>
+                      <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-lg font-bold text-slate-800">{{ analysis.match_percentage }}%</span>
+                      </div>
+                    </div>
+                    <span class="badge {{ getRecommendationClass(analysis.hiring_recommendation) }}">
+                      {{ analysis.hiring_recommendation }}
+                    </span>
+                    <span class="text-xs text-slate-400">Score: {{ analysis.suitability_score }}/10</span>
+                  </div>
+                </div>
+
+                <!-- Skills Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div class="bg-emerald-50 rounded-lg p-4">
+                    <h4 class="text-sm font-semibold text-emerald-800 mb-2">Matching Skills</h4>
+                    <div class="flex flex-wrap gap-1.5">
+                      @for (skill of analysis.matching_skills; track skill) {
+                        <span class="badge bg-emerald-100 text-emerald-700">{{ skill }}</span>
+                      }
+                    </div>
+                  </div>
+                  <div class="bg-red-50 rounded-lg p-4">
+                    <h4 class="text-sm font-semibold text-red-800 mb-2">Missing Skills</h4>
+                    <div class="flex flex-wrap gap-1.5">
+                      @for (skill of analysis.missing_skills; track skill) {
+                        <span class="badge bg-red-100 text-red-700">{{ skill }}</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Strengths & Weaknesses -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <h4 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Strengths</h4>
+                    <ul class="space-y-1.5">
+                      @for (s of analysis.strengths; track s) {
+                        <li class="flex items-start gap-2 text-sm text-slate-700">
+                          <span class="text-emerald-500 mt-0.5 flex-shrink-0">+</span>
+                          <span>{{ s }}</span>
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Weaknesses</h4>
+                    <ul class="space-y-1.5">
+                      @for (w of analysis.weaknesses; track w) {
+                        <li class="flex items-start gap-2 text-sm text-slate-700">
+                          <span class="text-red-400 mt-0.5 flex-shrink-0">−</span>
+                          <span>{{ w }}</span>
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            }
+
+            @if (loadingAnalysis === result.candidate_id) {
+              <app-loading-spinner />
+            }
+
+            <!-- Questions Card -->
+            @if (questions.get(result.candidate_id); as q) {
+              <div class="mt-6 pt-6 border-t border-slate-200 space-y-5">
+                <h4 class="text-sm font-semibold text-slate-500 uppercase tracking-wider">
+                  Interview Questions
+                </h4>
+
+                <div>
+                  <h5 class="text-sm font-semibold text-blue-800 mb-2">Technical</h5>
+                  <ol class="space-y-1.5 list-decimal list-inside">
+                    @for (item of q.technical_questions; track item.question) {
+                  {{ item.question }}
+                  💡 {{ item.rationale }}
+                  }
+                  </ol>
+                </div>
+
+                <div>
+                  <h5 class="text-sm font-semibold text-purple-800 mb-2">Project-Based</h5>
+                  <ol class="space-y-1.5 list-decimal list-inside">
+                    @for (item of q.project_questions; track item.question) {
+                    {{ item.question }}
+                    💡 {{ item.rationale }}
+                    }
+                  </ol>
+                </div>
+
+                <div>
+                  <h5 class="text-sm font-semibold text-amber-800 mb-2">Behavioral</h5>
+                  <ol class="space-y-1.5 list-decimal list-inside">
+                    @for (item of q.behavioral_questions; track item.question) {
+                    {{ item.question }}
+                    💡 {{ item.rationale }}
+                    }
+                  </ol>
+                </div>
+              </div>
+            }
+
+            @if (loadingQuestions === result.candidate_id) {
+              <app-loading-spinner />
+            }
+          </div>
+        }
+      }
+    </div>
+  </section>
+}

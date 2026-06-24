@@ -1,0 +1,61 @@
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: recrulink-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-recrulink}
+      MYSQL_USER: ${MYSQL_USER:-recrulink}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-rootpassword}
+    ports:
+      - "3307:3306"    #"3306:3306 use for localhost access"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: recrulink-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      PYTHONUNBUFFERED: 1   
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-recrulink}
+      MYSQL_USER: ${MYSQL_USER:-recrulink}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-rootpassword}
+      FAISS_INDEX_PATH: /app/faiss_index
+    volumes:
+      - faiss_data:/app/faiss_index
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # Angular Frontend (served by Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: recrulink-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
+  faiss_data:

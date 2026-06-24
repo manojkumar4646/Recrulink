@@ -1,0 +1,10 @@
+venv/
+env/
+__pycache__/
+*.pyc
+.git/
+.gitignore
+.env
+faiss_index/
+data/
+*.db

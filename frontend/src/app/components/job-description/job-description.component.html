@@ -1,0 +1,31 @@
+<!-- Job Description Input Section -->
+<section id="job" class="py-12 bg-white">
+  <div class="max-w-3xl mx-auto px-6">
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold text-slate-800">Job Description</h2>
+      <p class="text-slate-500 mt-1">Paste the job description to find matching candidates</p>
+    </div>
+
+    <div class="space-y-4">
+      <textarea
+        [formControl]="jobDescription"
+        rows="8"
+        class="input-field resize-y"
+        placeholder="Paste the full job description here...&#10;&#10;Include required skills, experience level, responsibilities, and qualifications."
+      ></textarea>
+
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-slate-400">
+          {{ jobDescription.value.length }} characters
+        </span>
+        <button
+          class="btn-primary"
+          (click)="onSubmit()"
+          [disabled]="!jobDescription.value.trim()"
+        >
+          Match Candidates
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
