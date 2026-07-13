@@ -46,7 +46,7 @@ An end-to-end AI application that uses **Retrieval-Augmented Generation (RAG)**,
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-repo/recrulink.git
+   git clone https://github.com/manojkumar4646/recrulink.git
    cd recrulink
    ```
 
